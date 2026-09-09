@@ -13,7 +13,7 @@ export type CronJobName = (typeof CRON_JOB_NAMES)[keyof typeof CRON_JOB_NAMES];
 export const DEFAULT_CRON_SCHEDULES: Record<CronJobName, { cron: string; description: string }> = {
   'cleanup-audit-logs': {
     cron: '0 2 * * *', // Daily at 02:00 AM (Asia/Ho_Chi_Minh - UTC+7)
-    description: 'Dọn dẹp các bản ghi Audit Logs cũ hơn 30 ngày',
+    description: 'Dọn dẹp các bản ghi Audit Logs cũ hơn 7 ngày',
   },
   'cleanup-unconfirmed-uploads': {
     cron: '0 3 * * *', // Daily at 03:00 AM (Asia/Ho_Chi_Minh - UTC+7)
@@ -33,6 +33,6 @@ export const DEFAULT_CRON_SCHEDULES: Record<CronJobName, { cron: string; descrip
   },
 };
 
-export const DEFAULT_AUDIT_LOG_RETENTION_DAYS = 30;
+export const DEFAULT_AUDIT_LOG_RETENTION_DAYS = 7;
 export const DEFAULT_UNCONFIRMED_UPLOAD_MAX_AGE_HOURS = 24;
 export const CRON_JOB_STATUSES_CONFIG_KEY = 'CRON_JOB_STATUSES';

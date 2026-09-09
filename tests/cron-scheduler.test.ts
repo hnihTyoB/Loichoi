@@ -168,6 +168,13 @@ describe('Scheduled Tasks & BullMQ Cron Jobs Engine', () => {
     assert.equal(mockRepo.auditLogsCreated[0].details.deletedCount, 15);
   });
 
+  it('2.1 Audit Log Cleanup: should default to 7 days retention when no retentionDays argument is passed', async () => {
+    const result = await cronService.executeAuditLogCleanup();
+    assert.equal(result.deletedCount, 15);
+    assert.equal(result.retentionDays, 7);
+    assert.ok(result.cutoffDate);
+  });
+
   it('3. R2 Uploads Cleanup: should scan storage and delete only orphaned files older than maxAgeHours', async () => {
     const result = await cronService.executeUploadsCleanup(24);
     assert.equal(result.scannedCount, 5);

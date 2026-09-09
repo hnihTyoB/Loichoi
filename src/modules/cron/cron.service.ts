@@ -1,4 +1,5 @@
 import { CronRepository, cronRepository } from './cron.repository';
+import { systemConfigService } from '../system-config/system-config.service';
 import { R2Service } from '../../common/services/r2.service';
 import { notificationDispatcher } from '../../common/services/notification-dispatcher.service';
 import { cronQueue } from '../../common/queues/cron.queue';
@@ -102,14 +103,22 @@ export class CronService {
   }
 
   /**
-   * 1. Dọn dẹp các bản ghi Audit Logs cũ hơn số ngày quy định (mặc định 30 ngày)
+   * 1. Dọn dẹp các bản ghi Audit Logs cũ hơn số ngày quy định (mặc định 7 ngày hoặc theo SystemConfig)
    */
-  async executeAuditLogCleanup(retentionDays = DEFAULT_AUDIT_LOG_RETENTION_DAYS): Promise<{
+  async executeAuditLogCleanup(retentionDays?: number): Promise<{
     deletedCount: number;
     retentionDays: number;
     cutoffDate: string;
   }> {
-    const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    let effectiveRetentionDays = retentionDays;
+    if (typeof effectiveRetentionDays !== 'number' || effectiveRetentionDays <= 0) {
+      const configVal = await systemConfigService
+        .get<number>('audit_log.retention_days', DEFAULT_AUDIT_LOG_RETENTION_DAYS)
+        .catch(() => DEFAULT_AUDIT_LOG_RETENTION_DAYS);
+      effectiveRetentionDays = Number(configVal) || DEFAULT_AUDIT_LOG_RETENTION_DAYS;
+    }
+
+    const cutoffDate = new Date(Date.now() - effectiveRetentionDays * 24 * 60 * 60 * 1000);
     const deletedCount = await this.repository.deleteAuditLogsOlderThan(cutoffDate);
 
     // Ghi audit log hệ thống về việc dọn dẹp
@@ -117,12 +126,12 @@ export class CronService {
       action: AUDIT_ACTION.CLEANUP_AUDIT_LOGS,
       targetType: AUDIT_TARGET_TYPE.CRON_JOB,
       targetId: CRON_JOB_NAMES.CLEANUP_AUDIT_LOGS,
-      details: { deletedCount, retentionDays, cutoffDate: cutoffDate.toISOString() },
+      details: { deletedCount, retentionDays: effectiveRetentionDays, cutoffDate: cutoffDate.toISOString() },
     });
 
     return {
       deletedCount,
-      retentionDays,
+      retentionDays: effectiveRetentionDays,
       cutoffDate: cutoffDate.toISOString(),
     };
   }
@@ -307,7 +316,7 @@ export class CronService {
 
     switch (jobName) {
       case CRON_JOB_NAMES.CLEANUP_AUDIT_LOGS: {
-        const days = typeof params['retentionDays'] === 'number' ? params['retentionDays'] : DEFAULT_AUDIT_LOG_RETENTION_DAYS;
+        const days = typeof params['retentionDays'] === 'number' ? params['retentionDays'] : undefined;
         executionData = await this.executeAuditLogCleanup(days);
         break;
       }

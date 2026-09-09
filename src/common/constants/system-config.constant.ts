@@ -209,6 +209,13 @@ export const DEFAULT_SYSTEM_CONFIGS = [
     category: SYSTEM_CONFIG_CATEGORY.GENERAL,
     isPublic: false,
   },
+  {
+    key: 'audit_log.retention_days',
+    value: 7,
+    description: 'Số ngày lưu trữ nhật ký kiểm toán (Audit Logs) trước khi tự động dọn dẹp',
+    category: SYSTEM_CONFIG_CATEGORY.SECURITY,
+    isPublic: false,
+  },
 ] as const;
 
 export const SYSTEM_CONFIG_PUBSUB_CHANNEL = 'system_config:events';
