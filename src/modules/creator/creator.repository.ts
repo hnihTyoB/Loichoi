@@ -108,7 +108,7 @@ export class CreatorRepository {
     });
   }
   async getCreatorStats(userId: string): Promise<CreatorProfileStatsDto> {
-    const [themesCount, downloadStats, followersCount, collectionsCount] = await Promise.all([
+    const [themesCount, downloadStats, followersCount] = await Promise.all([
       prisma.keyboardTheme.count({
         where: {
           createdBy: userId,
@@ -130,12 +130,6 @@ export class CreatorRepository {
           followingId: userId,
         },
       }),
-      prisma.collection.count({
-        where: {
-          userId,
-          isPublic: true,
-        },
-      }),
     ]);
 
     return {
@@ -143,7 +137,6 @@ export class CreatorRepository {
       downloadsCount: downloadStats._sum.downloadCount || 0,
       likesCount: downloadStats._sum.likeCount || 0,
       followersCount,
-      collectionsCount,
     };
   }
 
@@ -333,31 +326,19 @@ export class CreatorRepository {
     const userIds = users.map((u) => u.id);
 
     // Batch query aggregates for all creators on page in parallel (O(1) queries instead of N+1)
-    const [downloadAggregates, collectionAggregates] = userIds.length > 0
-      ? await Promise.all([
-          prisma.keyboardTheme.groupBy({
-            by: ['createdBy'],
-            where: {
-              createdBy: { in: userIds },
-              status: 'PUBLISHED',
-            },
-            _sum: {
-              downloadCount: true,
-              likeCount: true,
-            },
-          }),
-          prisma.collection.groupBy({
-            by: ['userId'],
-            where: {
-              userId: { in: userIds },
-              isPublic: true,
-            },
-            _count: {
-              _all: true,
-            },
-          }),
-        ])
-      : [[], []];
+    const downloadAggregates = userIds.length > 0
+      ? await prisma.keyboardTheme.groupBy({
+          by: ['createdBy'],
+          where: {
+            createdBy: { in: userIds },
+            status: 'PUBLISHED',
+          },
+          _sum: {
+            downloadCount: true,
+            likeCount: true,
+          },
+        })
+      : [];
 
     const downloadStatsMap = new Map<string, { downloadsCount: number; likesCount: number }>();
     for (const item of downloadAggregates) {
@@ -369,14 +350,8 @@ export class CreatorRepository {
       }
     }
 
-    const collectionStatsMap = new Map<string, number>();
-    for (const item of collectionAggregates) {
-      collectionStatsMap.set(item.userId, item._count._all || 0);
-    }
-
     const dataWithStats = users.map((user) => {
       const downloadStats = downloadStatsMap.get(user.id) || { downloadsCount: 0, likesCount: 0 };
-      const collectionsCount = collectionStatsMap.get(user.id) || 0;
 
       return {
         id: user.id,
@@ -392,7 +367,6 @@ export class CreatorRepository {
           downloadsCount: downloadStats.downloadsCount,
           likesCount: downloadStats.likesCount,
           followersCount: user._count.followers,
-          collectionsCount,
         },
       };
     });
@@ -495,7 +469,7 @@ export class CreatorRepository {
     const followingIds = follows.map((f) => f.following.id);
 
     // Batch query aggregates for all followed creators in parallel (O(1) queries instead of N+1)
-    const [themeAggregates, followerAggregates, collectionAggregates] = followingIds.length > 0
+    const [themeAggregates, followerAggregates] = followingIds.length > 0
       ? await Promise.all([
           prisma.keyboardTheme.groupBy({
             by: ['createdBy'],
@@ -520,18 +494,8 @@ export class CreatorRepository {
               _all: true,
             },
           }),
-          prisma.collection.groupBy({
-            by: ['userId'],
-            where: {
-              userId: { in: followingIds },
-              isPublic: true,
-            },
-            _count: {
-              _all: true,
-            },
-          }),
         ])
-      : [[], [], []];
+      : [[], []];
 
     const themeStatsMap = new Map<string, { themesCount: number; downloadsCount: number; likesCount: number }>();
     for (const item of themeAggregates) {
@@ -549,15 +513,9 @@ export class CreatorRepository {
       followerStatsMap.set(item.followingId, item._count._all || 0);
     }
 
-    const collectionStatsMap = new Map<string, number>();
-    for (const item of collectionAggregates) {
-      collectionStatsMap.set(item.userId, item._count._all || 0);
-    }
-
     const data = follows.map((f) => {
       const themeStats = themeStatsMap.get(f.following.id) || { themesCount: 0, downloadsCount: 0, likesCount: 0 };
       const followersCount = followerStatsMap.get(f.following.id) || 0;
-      const collectionsCount = collectionStatsMap.get(f.following.id) || 0;
 
       return {
         id: f.following.id,
@@ -573,7 +531,6 @@ export class CreatorRepository {
           downloadsCount: themeStats.downloadsCount,
           likesCount: themeStats.likesCount,
           followersCount,
-          collectionsCount,
         },
         followedAt: f.createdAt,
       };

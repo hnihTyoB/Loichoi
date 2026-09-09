@@ -6,6 +6,7 @@ import {
   keyboardSlugParamSchema,
   keyboardPublicQuerySchema,
   keyboardManagementQuerySchema,
+  keyboardLikedQuerySchema,
   getThemeImageUploadUrlSchema,
   getThemeBatchImageUploadUrlsSchema,
   bulkDeleteKeyboardSchema,
@@ -23,7 +24,7 @@ const ColorSummarySchema = z.object({
   id: z.string().uuid(),
   name: z.string().openapi({ example: 'Pink' }),
   slug: z.string().openapi({ example: 'pink' }),
-  hex: z.string().openapi({ example: '#FFB7C5' }),
+  hex: z.string().openapi({ example: '#FFB7C5' }),  
 });
 
 const StyleSummarySchema = z.object({
@@ -92,8 +93,9 @@ export function registerKeyboardOpenApi(): void {
     method: 'get',
     path: '/keyboards/me/liked',
     tags: ['Keyboard Themes'],
-    summary: 'Danh sách giao diện bàn phím người dùng đã thả tim (Yêu cầu đăng nhập)',
+    summary: 'Danh sách giao diện bàn phím người dùng đã thả tim (Yêu cầu đăng nhập & quyền KEYBOARD_LIKE_READ)',
     security: [{ BearerAuth: [] }],
+    request: { query: keyboardLikedQuerySchema },
     responses: {
       200: {
         description: 'Lấy danh sách theme đã thích thành công',

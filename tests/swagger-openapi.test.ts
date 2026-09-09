@@ -120,8 +120,6 @@ describe('Auto Swagger OpenAPI Generation via zod-to-openapi', () => {
     assert.ok(paths['/keyboards/manage/bulk-delete']);
     assert.ok(paths['/creators']);
     assert.ok(paths['/creators/manage/applications']);
-    assert.ok(paths['/collections']);
-    assert.ok(paths['/collections/manage']);
     assert.ok(paths['/studio/stats']);
     assert.ok(paths['/studio/themes']);
     assert.ok(paths['/studio/upload-url']);

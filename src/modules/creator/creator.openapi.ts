@@ -13,7 +13,6 @@ const CreatorStatsSchema = z.object({
   downloadsCount: z.number().int().openapi({ example: 126000 }),
   followersCount: z.number().int().openapi({ example: 12000 }),
   likesCount: z.number().int().openapi({ example: 3400 }),
-  collectionsCount: z.number().int().openapi({ example: 4 }),
 });
 
 const CreatorPublicSchema = z.object({

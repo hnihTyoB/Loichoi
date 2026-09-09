@@ -392,8 +392,6 @@ export class RbacRepository {
         targetLabel = details.key;
       } else if (typeof details.templateCode === 'string') {
         targetLabel = details.templateCode;
-      } else if (typeof details.collectionName === 'string') {
-        targetLabel = details.collectionName;
       }
 
       return {

@@ -79,39 +79,6 @@ describe('P0 & P1 Full Audit Remediation Test Suite', () => {
     });
   });
 
-  describe('3. [P0-03] Collection Privilege Escalation Protection on isFeatured', () => {
-    it('should strip isFeatured if user is not ADMIN during update payload preparation', () => {
-      const userRole = 'MEMBER';
-      const updateData = {
-        name: 'Bộ sưu tập của tôi',
-        isFeatured: true, // Attacker trying to set isFeatured
-      };
-
-      const updatePayload = { ...updateData };
-      if (userRole !== 'ADMIN') {
-        delete (updatePayload as any).isFeatured;
-      }
-
-      assert.equal(updatePayload.name, 'Bộ sưu tập của tôi');
-      assert.equal((updatePayload as any).isFeatured, undefined);
-    });
-
-    it('should preserve isFeatured if user is ADMIN', () => {
-      const userRole = 'ADMIN';
-      const updateData = {
-        name: 'Bộ sưu tập nổi bật ban quản trị',
-        isFeatured: true,
-      };
-
-      const updatePayload = { ...updateData };
-      if (userRole !== 'ADMIN') {
-        delete (updatePayload as any).isFeatured;
-      }
-
-      assert.equal(updatePayload.isFeatured, true);
-    });
-  });
-
   describe('4. [P1-03] Creator Studio Schema Validation with colorIds & styleIds', () => {
     it('should parse studioCreateThemeSchema with valid colorIds and styleIds', () => {
       const validPayload = {

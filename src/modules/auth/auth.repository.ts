@@ -10,14 +10,25 @@ function hashToken(token: string): string {
 export class AuthRepository {
   findByEmail(email: string) {
     return prisma.user.findFirst({
-      where: { email, deletedAt: null },
+      where: {
+        email: {
+          equals: email.trim(),
+          mode: 'insensitive',
+        },
+        deletedAt: null,
+      },
       include: { role: true, socialAccounts: true },
     });
   }
 
   findAnyByEmail(email: string) {
     return prisma.user.findFirst({
-      where: { email },
+      where: {
+        email: {
+          equals: email.trim(),
+          mode: 'insensitive',
+        },
+      },
       include: { role: true, socialAccounts: true },
     });
   }

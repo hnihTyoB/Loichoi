@@ -36,15 +36,6 @@ export const CREATOR_SORT = {
 
 export type CreatorSort = keyof typeof CREATOR_SORT;
 
-export const COLLECTION_SORT = {
-  LATEST: 'LATEST',
-  FEATURED: 'FEATURED',
-  NAME_ASC: 'NAME_ASC',
-  NAME_DESC: 'NAME_DESC',
-} as const;
-
-export type CollectionSort = keyof typeof COLLECTION_SORT;
-
 export const THEME_ACCESS_LEVEL = {
   FREE: 'FREE',
   PREMIUM: 'PREMIUM',

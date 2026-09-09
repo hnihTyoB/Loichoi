@@ -89,46 +89,6 @@ describe('Comprehensive Remediation Verification (All 17 Audit Findings BL-01 ->
       // In UTC+7, 2026-09-05 23:59:59.999 +07:00 is 2026-09-05 16:59:59.999 UTC
       assert.equal(endOfDay.toISOString(), '2026-09-05T16:59:59.999Z');
     });
-
-    it('[BL-08] Collection authorization should check dynamic permissions instead of hardcoded ADMIN', async () => {
-      const { CollectionService } = await import('../src/modules/collection/collection.service');
-      const service = new CollectionService();
-
-      const mockRepo = {
-        findById: async () => ({
-          id: 'col-1',
-          userId: 'owner-id',
-          name: 'Col 1',
-          slug: 'col-1',
-        }),
-        findBySlug: async () => null,
-        findPublicBySlug: async () => ({ id: 'col-1', name: 'Updated', slug: 'col-1', isPublic: true }),
-        update: async () => ({ id: 'col-1', name: 'Updated', slug: 'col-1' }),
-        createAuditLog: async () => {},
-      };
-      (service as any).repository = mockRepo;
-
-      // User with COLLECTION_UPDATE permission should be allowed even if not owner
-      const updated = await service.update(
-        'col-1',
-        { name: 'Admin Updated' },
-        'moderator-id',
-        'MODERATOR',
-        undefined,
-        ['COLLECTION_UPDATE'],
-      );
-      assert.equal((updated as any).name, 'Updated');
-
-      // User without ownership and without permission should be rejected with 403
-      await assert.rejects(
-        () => service.update('col-1', { name: 'Hacker' }, 'stranger-id', 'MEMBER', undefined, []),
-        (err: AppError) => {
-          assert.equal(err.statusCode, 403);
-          assert.equal(err.code, ERROR_CODE.NOT_COLLECTION_OWNER);
-          return true;
-        },
-      );
-    });
   });
 
   describe('Giai đoạn 3: Tối Ưu Hiệu Năng & Khắc Phục Lỗi Logic (P1 - Perf & Logic)', () => {

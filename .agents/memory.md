@@ -146,19 +146,16 @@
     - Public responses chuẩn hóa kèm thông tin Creator (`author: { id, fullName, username, avatarUrl }`), `likeCount`, `downloadCount`, `isLiked`.
   - **Creators System (`src/modules/creator/` & `/api/v1/creators`)**:
     - Public Creator Profile (`@username`, bio, avatar, banner, mạng xã hội).
-    - Tính toán metrics tức thời: `themesCount`, `downloadsCount`, `followersCount`, `likesCount`, `collectionsCount`.
+    - Tính toán metrics tức thời: `themesCount`, `downloadsCount`, `followersCount`, `likesCount`.
     - Follow & Unfollow Engine (`POST /:username/follow`) với atomic transaction cập nhật `followerCount`.
     - Endpoint danh sách theo dõi của người dùng (`GET /api/v1/creators/me/following`).
-  - **Collections System (`src/modules/collection/` & `/api/v1/collections`)**:
-    - Bộ sưu tập Curated / Creator Collections nhiều theme với thứ tự `position`.
-    - Phân quyền cập nhật/xóa theo quyền sở hữu (Owner hoặc Admin).
-    - Hạn mức số lượng theme tối đa qua `collections.max_themes_per_collection` trong `SystemConfig`.
   - **Creator Studio (`src/modules/studio/` & `/api/v1/studio`)**:
     - Cổng quản trị chuyên biệt dành cho Creator: Dashboard tổng hợp metrics, biểu đồ xu hướng tải 30 ngày theo ngày (UTC+7), Top 5 theme thịnh hành.
     - Quản lý theme của creator (đăng theme mới, chỉnh sửa, xóa/archive).
     - Cập nhật hồ sơ Creator & Quy trình đăng ký Creator (`POST /apply`).
   - **Database Migration**:
-    - Migration `20260826000000_add_keyboard_hub_platform_models` tạo bảng `keyboard_likes`, `user_follows`, `collections`, `collection_items`, bổ sung các cột và composite indexes vào `users` và `keyboard_themes`.
+    - Migration `20260826000000_add_keyboard_hub_platform_models` tạo bảng `keyboard_likes`, `user_follows`, bổ sung các cột và composite indexes vào `users` và `keyboard_themes`.
+    - Migration `20260909000000_remove_collections` loại bỏ các bảng và khóa ngoại liên quan đến `collections` và `collection_items`.
 
 ## Security Fixes Applied (2026-08-26 — full-project-audit)
 

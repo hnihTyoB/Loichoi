@@ -2,18 +2,11 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { usernameParamSchema, creatorQuerySchema } from '../src/modules/creator/creator.validation';
 import {
-  createCollectionSchema,
-  updateCollectionSchema,
-  collectionQuerySchema,
-  addCollectionThemeSchema,
-} from '../src/modules/collection/collection.validation';
-import {
   studioUpdateProfileSchema,
   studioApplySchema,
   studioThemeQuerySchema,
 } from '../src/modules/studio/studio.validation';
 import { CreatorService } from '../src/modules/creator/creator.service';
-import { CollectionService } from '../src/modules/collection/collection.service';
 import { KeyboardService } from '../src/modules/keyboard/keyboard.service';
 import { StudioService } from '../src/modules/studio/studio.service';
 import { AppError } from '../src/common/errors/app-error';
@@ -45,29 +38,6 @@ describe('KeyboardHub Platform - Validation Schemas', () => {
     assert.equal(valid.search, 'kuro');
     assert.equal(valid.isFeatured, true);
     assert.equal(valid.sort, 'TOP_FOLLOWERS');
-  });
-
-  it('should validate createCollectionSchema correctly', () => {
-    const valid = createCollectionSchema.parse({
-      name: 'Sakura & Pastel Aesthetics',
-      slug: 'sakura-pastel-aesthetics',
-      description: 'Hand-curated pastel collection',
-      coverUrl: 'https://images.unsplash.com/photo-1522383225653-ed111181a951',
-      isPublic: true,
-      themeIds: ['11111111-1111-1111-1111-111111111111'],
-    });
-    assert.equal(valid.name, 'Sakura & Pastel Aesthetics');
-    assert.equal(valid.slug, 'sakura-pastel-aesthetics');
-    assert.equal(valid.isPublic, true);
-    assert.equal(valid.themeIds?.length, 1);
-
-    assert.throws(() => createCollectionSchema.parse({ name: 'AB' })); // Min 3 chars
-    assert.throws(() =>
-      createCollectionSchema.parse({
-        name: 'Valid Name',
-        coverUrl: 'not-a-url',
-      }),
-    );
   });
 
   it('should validate studioUpdateProfileSchema and studioApplySchema', () => {
@@ -125,7 +95,6 @@ describe('KeyboardHub Platform - Creator Domain Services', () => {
         downloadsCount: 126000,
         followersCount: 12000,
         likesCount: 3400,
-        collectionsCount: 4,
       }),
       isUserFollowing: async () => true,
     };
@@ -241,73 +210,61 @@ describe('KeyboardHub Platform - Keyboard Likes Domain', () => {
       },
     );
   });
-});
 
-describe('KeyboardHub Platform - Collections Domain', () => {
-  let collectionService: CollectionService;
-
-  beforeEach(() => {
-    collectionService = new CollectionService();
-  });
-
-  it('should create collection with auto-slug and audit log', async () => {
+  it('should return user liked themes when feature is enabled', async () => {
     const mockRepo = {
-      findBySlug: async () => null,
-      create: async (data: any) => ({
-        id: 'col-uuid-1',
-        name: data.name,
-        slug: data.slug,
-        isPublic: true,
+      findUserLikedThemes: async (userId: string, page: number, limit: number) => ({
+        data: [
+          {
+            id: 'theme-uuid-1',
+            name: 'Sakura Dream',
+            slug: 'sakura-dream',
+            coverUrl: 'https://cdn.example.com/sakura.webp',
+            platform: 'IOS',
+            accessLevel: 'FREE',
+            downloadCount: 126000,
+            likeCount: 3401,
+            isLiked: true,
+            categories: [],
+            colors: [],
+            styles: [],
+            likedAt: new Date('2026-09-09T10:00:00Z'),
+          },
+        ],
+        meta: {
+          total: 1,
+          page,
+          limit,
+          totalPages: 1,
+        },
       }),
-      findPublicBySlug: async (slug: string) => ({
-        id: 'col-uuid-1',
-        name: 'Pastel Dream Themes',
-        slug,
-        isPublic: true,
-        itemsCount: 0,
-        items: [],
-      }),
-      createAuditLog: async () => {},
     };
     const mockConfigService = {
       isFeatureEnabled: async () => true,
-      get: async () => 100,
     };
 
-    (collectionService as any).repository = mockRepo;
-    (collectionService as any).systemConfigService = mockConfigService;
+    (keyboardService as any).repository = mockRepo;
+    (keyboardService as any).systemConfigService = mockConfigService;
 
-    const col = await collectionService.create(
-      { name: 'Pastel Dream Themes' },
-      'user-uuid-1',
-    );
-
-    assert.equal(col.name, 'Pastel Dream Themes');
-    assert.equal(col.slug, 'pastel-dream-themes');
+    const result = await keyboardService.findUserLikedThemes('user-uuid-1', 1, 10);
+    assert.equal(result.data.length, 1);
+    assert.equal(result.data[0].slug, 'sakura-dream');
+    assert.equal(result.data[0].isLiked, true);
+    assert.equal(result.meta.total, 1);
   });
 
-  it('should enforce ownership on collection update', async () => {
-    const mockRepo = {
-      findById: async () => ({
-        id: 'col-uuid-1',
-        userId: 'owner-uuid',
-        name: 'Original Name',
-        slug: 'original-name',
-      }),
+  it('should reject findUserLikedThemes if feature flag is disabled', async () => {
+    const mockConfigService = {
+      isFeatureEnabled: async () => false,
     };
-    (collectionService as any).repository = mockRepo;
+
+    (keyboardService as any).systemConfigService = mockConfigService;
 
     await assert.rejects(
-      () =>
-        collectionService.update(
-          'col-uuid-1',
-          { name: 'New Name' },
-          'intruder-uuid',
-          'USER',
-        ),
+      () => keyboardService.findUserLikedThemes('user-uuid-1', 1, 10),
       (err: AppError) => {
         assert.equal(err.statusCode, 403);
-        assert.equal(err.code, ERROR_CODE.NOT_COLLECTION_OWNER);
+        assert.equal(err.code, ERROR_CODE.FEATURE_DISABLED);
         return true;
       },
     );

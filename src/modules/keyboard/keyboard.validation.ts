@@ -184,3 +184,11 @@ export const bulkDeleteKeyboardSchema = z.object({
 });
 
 export type BulkDeleteKeyboardDto = z.infer<typeof bulkDeleteKeyboardSchema>;
+
+export const keyboardLikedQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type KeyboardLikedQueryDto = z.infer<typeof keyboardLikedQuerySchema>;
+

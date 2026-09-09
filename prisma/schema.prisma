@@ -47,7 +47,6 @@ model User {
   likes                KeyboardLike[]
   followers            UserFollow[]         @relation("UserFollowers")
   following            UserFollow[]         @relation("UserFollowing")
-  collections          Collection[]
 
   @@index([roleId])
   @@index([deletedAt])
@@ -361,7 +360,6 @@ model KeyboardTheme {
   styles                 KeyboardStyle[]
   author                 User?                   @relation("AuthoredThemes", fields: [createdBy], references: [id])
   likes                  KeyboardLike[]
-  collectionItems        CollectionItem[]
 
   @@index([status, publishedAt(sort: Desc)])
   @@index([platform])
@@ -507,39 +505,6 @@ model UserFollow {
   @@unique([followerId, followingId])
   @@index([followingId])
   @@map("user_follows")
-}
-
-model Collection {
-  id          String           @id @default(uuid()) @db.Uuid
-  name        String
-  slug        String           @unique
-  description String?
-  coverUrl    String?          @map("cover_url")
-  isPublic    Boolean          @default(true) @map("is_public")
-  isFeatured  Boolean          @default(false) @map("is_featured")
-  userId      String           @map("user_id") @db.Uuid
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       CollectionItem[]
-
-  @@index([userId])
-  @@index([isPublic, isFeatured])
-  @@map("collections")
-}
-
-model CollectionItem {
-  id              String        @id @default(uuid()) @db.Uuid
-  collectionId    String        @map("collection_id") @db.Uuid
-  keyboardThemeId String        @map("keyboard_theme_id") @db.Uuid
-  position        Int           @default(0)
-  createdAt       DateTime      @default(now()) @map("created_at")
-  collection      Collection    @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  theme           KeyboardTheme @relation(fields: [keyboardThemeId], references: [id], onDelete: Cascade)
-
-  @@unique([collectionId, keyboardThemeId])
-  @@index([keyboardThemeId])
-  @@map("collection_items")
 }
 
 // ===== DISCORD IMPORT SYSTEM =====

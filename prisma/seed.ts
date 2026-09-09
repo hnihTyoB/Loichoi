@@ -56,18 +56,13 @@ const SYSTEM_PERMISSIONS = [
   { name: 'KEYBOARD_CREATE', resource: 'KEYBOARD', action: 'CREATE', description: 'Tạo mới Keyboard Theme' },
   { name: 'KEYBOARD_UPDATE', resource: 'KEYBOARD', action: 'UPDATE', description: 'Chỉnh sửa Keyboard Theme, đổi trạng thái và cập nhật ảnh' },
   { name: 'KEYBOARD_DELETE', resource: 'KEYBOARD', action: 'DELETE', description: 'Xóa hoặc lưu trữ (archive) Keyboard Theme' },
+  { name: 'KEYBOARD_LIKE_READ', resource: 'KEYBOARD_LIKE', action: 'READ', description: 'Xem danh sách bàn phím đã yêu thích của người dùng' },
 
   // Categories Management
   { name: 'CATEGORY_READ', resource: 'CATEGORY', action: 'READ', description: 'Xem danh sách danh mục quản trị' },
   { name: 'CATEGORY_CREATE', resource: 'CATEGORY', action: 'CREATE', description: 'Tạo mới danh mục' },
   { name: 'CATEGORY_UPDATE', resource: 'CATEGORY', action: 'UPDATE', description: 'Chỉnh sửa danh mục' },
   { name: 'CATEGORY_DELETE', resource: 'CATEGORY', action: 'DELETE', description: 'Xóa danh mục' },
-
-  // Collections Management
-  { name: 'COLLECTION_READ', resource: 'COLLECTION', action: 'READ', description: 'Xem danh sách bộ sưu tập' },
-  { name: 'COLLECTION_CREATE', resource: 'COLLECTION', action: 'CREATE', description: 'Tạo mới bộ sưu tập' },
-  { name: 'COLLECTION_UPDATE', resource: 'COLLECTION', action: 'UPDATE', description: 'Chỉnh sửa bộ sưu tập' },
-  { name: 'COLLECTION_DELETE', resource: 'COLLECTION', action: 'DELETE', description: 'Xóa bộ sưu tập' },
 
   // Colors Management
   { name: 'COLOR_READ', resource: 'COLOR', action: 'READ', description: 'Xem danh sách màu sắc quản trị' },
@@ -93,11 +88,8 @@ const SYSTEM_PERMISSIONS = [
 
 const USER_BASE_PERMISSIONS: string[] = [
   'NOTIFICATION_READ',
-  'COLLECTION_READ',
-  'COLLECTION_CREATE',
-  'COLLECTION_UPDATE',
-  'COLLECTION_DELETE',
   'STUDIO_ACCESS',
+  'KEYBOARD_LIKE_READ',
 ];
 
 const MANAGER_PERMISSIONS: string[] = [
@@ -115,6 +107,7 @@ const MANAGER_PERMISSIONS: string[] = [
   'SYSTEM_CONFIG_READ',
   'CRON_JOB_READ',
   'KEYBOARD_READ',
+  'KEYBOARD_LIKE_READ',
   'CATEGORY_READ',
   'CATEGORY_CREATE',
   'CATEGORY_UPDATE',
@@ -124,10 +117,6 @@ const MANAGER_PERMISSIONS: string[] = [
   'STYLE_READ',
   'STYLE_CREATE',
   'STYLE_UPDATE',
-  'COLLECTION_READ',
-  'COLLECTION_CREATE',
-  'COLLECTION_UPDATE',
-  'COLLECTION_DELETE',
   'STUDIO_ACCESS',
   'CREATOR_MANAGE',
   'IMPORT_READ',
@@ -146,6 +135,7 @@ async function main() {
   if (deletedPerms.count > 0) {
     console.log(`Cleaned up ${deletedPerms.count} obsolete permissions from previous projects/schemas`);
   }
+
 
   // 1. Seed Permissions
   const permissionMap: Record<string, string> = {};
@@ -206,11 +196,8 @@ async function main() {
       'KEYBOARD_READ',
       'KEYBOARD_CREATE',
       'KEYBOARD_UPDATE',
-      'COLLECTION_READ',
-      'COLLECTION_CREATE',
-      'COLLECTION_UPDATE',
-      'COLLECTION_DELETE',
       'STUDIO_ACCESS',
+      'KEYBOARD_LIKE_READ',
     ],
     USER: USER_BASE_PERMISSIONS,
   };
@@ -721,43 +708,7 @@ async function main() {
     },
   });
 
-  // Seed sample Collection
-  const sampleCollection = await prisma.collection.upsert({
-    where: { slug: 'sakura-pastel-aesthetics' },
-    update: {
-      name: 'Sakura & Pastel Aesthetics',
-      description: 'A hand-curated collection of calming pastel pinks and cherry blossom designs.',
-      coverUrl: 'https://images.unsplash.com/photo-1522383225653-ed111181a951',
-      isPublic: true,
-      isFeatured: true,
-      userId: kuroUser.id,
-    },
-    create: {
-      name: 'Sakura & Pastel Aesthetics',
-      slug: 'sakura-pastel-aesthetics',
-      description: 'A hand-curated collection of calming pastel pinks and cherry blossom designs.',
-      coverUrl: 'https://images.unsplash.com/photo-1522383225653-ed111181a951',
-      isPublic: true,
-      isFeatured: true,
-      userId: kuroUser.id,
-    },
-  });
-
-  await prisma.collectionItem.upsert({
-    where: {
-      collectionId_keyboardThemeId: {
-        collectionId: sampleCollection.id,
-        keyboardThemeId: sakuraTheme.id,
-      },
-    },
-    update: {},
-    create: {
-      collectionId: sampleCollection.id,
-      keyboardThemeId: sakuraTheme.id,
-      position: 0,
-    },
-  });
-  console.log('Sample KeyboardHub Theme and Collection seeded');
+  console.log('Sample KeyboardHub Theme seeded');
 
   // 9. Seed Default System Configurations & Feature Flags
   const { DEFAULT_SYSTEM_CONFIGS } = await import('../src/common/constants/system-config.constant');

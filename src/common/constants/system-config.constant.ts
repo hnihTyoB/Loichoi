@@ -18,7 +18,6 @@ export const FEATURE_FLAGS = {
   THEME_ANNOUNCEMENT_WEBHOOK: 'feature.theme_announcement_webhook.enabled',
   TIER_DOWNLOAD_QUOTA: 'feature.tier_download_quota.enabled',
   CREATOR_STUDIO_ENABLED: 'feature.creator_studio.enabled',
-  COLLECTIONS_ENABLED: 'feature.collections.enabled',
   KEYBOARD_LIKES_ENABLED: 'feature.keyboard_likes.enabled',
   CRON_SCHEDULER_ENABLED: 'feature.cron_scheduler.enabled',
   DISCORD_IMPORT_ENABLED: 'feature.discord_import.enabled',
@@ -106,14 +105,6 @@ export const DEFAULT_SYSTEM_CONFIGS = [
     isPublic: true,
   },
   {
-    key: 'collections.max_themes_per_collection',
-    value: 100,
-    description: 'Số lượng theme tối đa được gán vào một bộ sưu tập',
-    category: SYSTEM_CONFIG_CATEGORY.GENERAL,
-    isPublic: true,
-  },
-
-  {
     key: FEATURE_FLAGS.REGISTRATION_ENABLED,
     value: true,
     description: 'Cho phép người dùng mới đăng ký tài khoản tự do',
@@ -173,13 +164,6 @@ export const DEFAULT_SYSTEM_CONFIGS = [
     key: FEATURE_FLAGS.CREATOR_STUDIO_ENABLED,
     value: true,
     description: 'Bật tính năng Creator Studio cho phép người sáng tạo quản lý theme và số liệu thống kê',
-    category: SYSTEM_CONFIG_CATEGORY.FEATURE_FLAG,
-    isPublic: true,
-  },
-  {
-    key: FEATURE_FLAGS.COLLECTIONS_ENABLED,
-    value: true,
-    description: 'Bật tính năng Khám phá và Tạo bộ sưu tập',
     category: SYSTEM_CONFIG_CATEGORY.FEATURE_FLAG,
     isPublic: true,
   },

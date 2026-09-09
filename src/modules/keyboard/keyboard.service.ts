@@ -507,6 +507,15 @@ export class KeyboardService {
   }
 
   async findUserLikedThemes(userId: string, page = 1, limit = 20) {
+    const isLikesEnabled = await this.systemConfigService.isFeatureEnabled(
+      FEATURE_FLAGS.KEYBOARD_LIKES_ENABLED,
+      true,
+    );
+
+    if (!isLikesEnabled) {
+      throw new AppError('Tính năng yêu thích theme tạm thời bị vô hiệu hóa', 403, ERROR_CODE.FEATURE_DISABLED);
+    }
+
     return this.repository.findUserLikedThemes(userId, page, limit);
   }
 

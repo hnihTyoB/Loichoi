@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { keyboardController } from './keyboard.controller';
 import { authMiddleware, optionalAuthMiddleware } from '../../middlewares/auth.middleware';
 import { requirePermission } from '../../middlewares/permission.middleware';
+import { requireFeatureFlag } from '../../middlewares/feature-flag.middleware';
 import { validate } from '../../middlewares/validate.middleware';
 import { createRateLimiter } from '../../middlewares/rate-limit.middleware';
 import { PERMISSIONS } from '../../common/constants/permission.constant';
+import { FEATURE_FLAGS } from '../../common/constants/system-config.constant';
 import {
   createKeyboardSchema,
   updateKeyboardSchema,
@@ -13,6 +15,7 @@ import {
   keyboardSlugParamSchema,
   keyboardPublicQuerySchema,
   keyboardManagementQuerySchema,
+  keyboardLikedQuerySchema,
   getThemeImageUploadUrlSchema,
   getThemeBatchImageUploadUrlsSchema,
   bulkDeleteKeyboardSchema,
@@ -78,6 +81,9 @@ router.get(
 router.get(
   '/me/liked',
   authMiddleware,
+  requireFeatureFlag(FEATURE_FLAGS.KEYBOARD_LIKES_ENABLED),
+  requirePermission(PERMISSIONS.KEYBOARD_LIKE_READ),
+  validate(keyboardLikedQuerySchema, 'query'),
   keyboardController.findUserLikedThemes,
 );
 
@@ -116,6 +122,7 @@ router.get(
 router.post(
   '/:slug/like',
   authMiddleware,
+  requireFeatureFlag(FEATURE_FLAGS.KEYBOARD_LIKES_ENABLED),
   validate(keyboardSlugParamSchema, 'params'),
   keyboardController.toggleLike,
 );

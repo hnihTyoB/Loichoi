@@ -5,7 +5,6 @@ export interface CreatorProfileStatsDto {
   downloadsCount: number;
   followersCount: number;
   likesCount: number;
-  collectionsCount: number;
 }
 
 export interface CreatorPublicProfileDto {
